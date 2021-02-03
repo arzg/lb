@@ -1,8 +1,6 @@
-use etcetera::app_strategy::{AppStrategy, AppStrategyArgs, Xdg};
 use journal::Db;
 use std::env;
-use std::fs::{self, File};
-use std::path::{Path, PathBuf};
+use std::fs;
 use std::process::Command;
 use tempfile::NamedTempFile;
 
@@ -38,55 +36,16 @@ fn add() -> anyhow::Result<()> {
     let entry = fs::read_to_string(&path)?;
     path.close()?;
 
-    let mut db = read_db()?;
+    let mut db = Db::read()?;
     db.push_entry(&entry);
-
-    write_db(&db)?;
+    db.write()?;
 
     Ok(())
 }
 
 fn export() -> anyhow::Result<()> {
-    let db = read_db()?;
+    let db = Db::read()?;
     println!("{}", db.markdown());
 
     Ok(())
-}
-
-fn read_db() -> anyhow::Result<Db> {
-    let db_path = get_db_path()?;
-
-    if !db_path.exists() {
-        let db = Db::default();
-        write_db(&db)?;
-        return Ok(db);
-    }
-
-    let db_file = File::open(db_path)?;
-    let db = bincode::deserialize_from(db_file)?;
-
-    Ok(db)
-}
-
-fn write_db(db: &Db) -> anyhow::Result<()> {
-    let db_path = get_db_path()?;
-    let db_file = safe_create_file(&db_path)?;
-    bincode::serialize_into(db_file, &db)?;
-
-    Ok(())
-}
-
-fn get_db_path() -> anyhow::Result<PathBuf> {
-    let xdg = Xdg::new(AppStrategyArgs {
-        top_level_domain: "io.github".to_string(),
-        author: "arzg".to_string(),
-        app_name: "journal".to_string(),
-    })?;
-
-    Ok(xdg.in_data_dir("db"))
-}
-
-fn safe_create_file(path: &Path) -> anyhow::Result<File> {
-    fs::create_dir_all(path.parent().unwrap())?;
-    Ok(File::create(path)?)
 }
