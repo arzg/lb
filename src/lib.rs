@@ -30,9 +30,7 @@ impl Db {
         let db_path = Self::path()?;
 
         if !db_path.exists() {
-            let db = Self::default();
-            db.write()?;
-            return Ok(db);
+            return Self::initialize();
         }
 
         let db_file = File::open(db_path)?;
@@ -47,6 +45,12 @@ impl Db {
         bincode::serialize_into(db_file, &self)?;
 
         Ok(())
+    }
+
+    fn initialize() -> anyhow::Result<Self> {
+        let db = Self::default();
+        db.write()?;
+        Ok(db)
     }
 
     fn path() -> anyhow::Result<PathBuf> {
