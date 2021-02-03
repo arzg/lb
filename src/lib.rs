@@ -85,13 +85,15 @@ pub struct Entry<'a> {
 
 impl<'a> From<&'a str> for Entry<'a> {
     fn from(s: &'a str) -> Self {
+        let s = s.trim();
+
         if let Some(first_line_ending) = s.find('\n') {
             let (first_line, rest) = s.split_at(first_line_ending);
 
             let date_on_first_line = NaiveDate::from_str(first_line);
             if let Ok(date) = date_on_first_line {
                 return Self {
-                    description: rest,
+                    description: rest.trim(),
                     date,
                 };
             }
