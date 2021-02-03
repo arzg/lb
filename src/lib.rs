@@ -65,8 +65,8 @@ impl<'a> Db<'a> {
     }
 
     pub fn write(&self, DbLocation(path): &DbLocation) -> anyhow::Result<()> {
-        let db_file = safe_create_file(path)?;
-        bincode::serialize_into(db_file, &self)?;
+        let file = safe_create_file(path)?;
+        bincode::serialize_into(file, &self)?;
 
         Ok(())
     }
@@ -74,6 +74,7 @@ impl<'a> Db<'a> {
     fn initialize(location: &DbLocation) -> anyhow::Result<Self> {
         let db = Self::default();
         db.write(location)?;
+
         Ok(db)
     }
 }
