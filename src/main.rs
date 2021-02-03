@@ -15,29 +15,29 @@ fn main() -> anyhow::Result<()> {
     };
 
     let db_location = DbLocation::locate()?;
-    let db = Db::read(&db_location)?;
+    let mut db = Db::read(&db_location)?;
 
     match subcommand.as_str() {
-        "add" => add(db, db_location)?,
-        "delete" => delete(db, db_location)?,
-        "edit" => edit(db, db_location)?,
-        "export" => export(db)?,
+        "add" => add(&mut db)?,
+        "delete" => delete(&mut db)?,
+        "edit" => edit(&mut db)?,
+        "export" => export(&db)?,
         _ => anyhow::bail!("invalid subcommand (try ‘add’, ‘delete’, ‘edit’ or ‘export’ instead)"),
     }
 
-    Ok(())
-}
-
-fn add(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
-    let entry = get_input_from_editoe("")?;
-
-    db.push_entry(Entry::from(entry.as_str()));
     db.write(&db_location)?;
 
     Ok(())
 }
 
-fn delete(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
+fn add(db: &mut Db) -> anyhow::Result<()> {
+    let entry = get_input_from_editoe("")?;
+    db.push_entry(Entry::from(entry.as_str()));
+
+    Ok(())
+}
+
+fn delete(db: &mut Db) -> anyhow::Result<()> {
     if db.is_empty() {
         anyhow::bail!("you can’t delete any entries because you don’t have any yet");
     }
@@ -47,12 +47,11 @@ fn delete(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
     let entry_to_delete = prompt("positive number")?;
 
     db.delete_entry(entry_to_delete);
-    db.write(&db_location)?;
 
     Ok(())
 }
 
-fn edit(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
+fn edit(db: &mut Db) -> anyhow::Result<()> {
     if db.is_empty() {
         anyhow::bail!("you can’t edit any entries because you don’t have any yet");
     }
@@ -66,14 +65,11 @@ fn edit(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
 
     db.replace_entry_description(entry_to_edit, edited_description);
 
-    db.write(&db_location)?;
-
     Ok(())
 }
 
-fn export(db: Db) -> anyhow::Result<()> {
+fn export(db: &Db) -> anyhow::Result<()> {
     println!("{}", db.markdown());
-
     Ok(())
 }
 
