@@ -6,28 +6,23 @@ use std::{env, fs};
 use tempfile::NamedTempFile;
 
 fn main() -> anyhow::Result<()> {
-    let mut args = env::args().skip(1);
+    let db_location = DbLocation::locate()?;
+    let mut db = Db::read(&db_location)?;
 
+    let mut args = env::args().skip(1);
     let subcommand = if let Some(s) = args.next() {
         s
     } else {
-        anyhow::bail!(
-            "you must specify a subcommand (‘add’, ‘delete’, ‘edit’, ‘export’ or ‘overview’)",
-        );
+        println!("{}", db.entry_overview());
+        return Ok(());
     };
-
-    let db_location = DbLocation::locate()?;
-    let mut db = Db::read(&db_location)?;
 
     match subcommand.as_str() {
         "add" => add(&mut db)?,
         "delete" => delete(&mut db)?,
         "edit" => edit(&mut db)?,
         "export" => export(&db)?,
-        "overview" => println!("{}", db.entry_overview()),
-        _ => anyhow::bail!(
-            "invalid subcommand (try ‘add’, ‘delete’, ‘edit’, ‘export’ or ‘overview’ instead)",
-        ),
+        _ => anyhow::bail!("invalid subcommand (try ‘add’, ‘delete’, ‘edit’ or ‘export’ instead)"),
     }
 
     db.write(&db_location)?;
