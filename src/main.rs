@@ -1,4 +1,4 @@
-use journal::{Db, DbLocation, Entry};
+use lb::{Db, DbLocation, Entry};
 use std::io::{self, Write};
 use std::process::Command;
 use std::str::FromStr;
