@@ -28,18 +28,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn add(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
-    let editor = env::var("EDITOR")?;
-
-    let file = NamedTempFile::new()?;
-    let path = file.into_temp_path();
-
-    let _ = Command::new("sh")
-        .arg("-c")
-        .arg(&format!("{} {}", editor, path.display()))
-        .status();
-
-    let entry = fs::read_to_string(&path)?;
-    path.close()?;
+    let entry = get_input_from_editoe("")?;
 
     db.push_entry(Entry::from(entry.as_str()));
     db.write(&db_location)?;
@@ -66,6 +55,25 @@ fn export(db: Db) -> anyhow::Result<()> {
     println!("{}", db.markdown());
 
     Ok(())
+}
+
+fn get_input_from_editoe(initial_content: &str) -> anyhow::Result<String> {
+    let editor = env::var("EDITOR")?;
+
+    let mut file = NamedTempFile::new()?;
+    file.write_all(initial_content.as_bytes())?;
+
+    let path = file.into_temp_path();
+
+    let _ = Command::new("sh")
+        .arg("-c")
+        .arg(&format!("{} {}", editor, path.display()))
+        .status();
+
+    let edited_content = fs::read_to_string(&path)?;
+    path.close()?;
+
+    Ok(edited_content)
 }
 
 fn prompt<T>(data_type_name: &str) -> anyhow::Result<T>
