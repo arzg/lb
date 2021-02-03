@@ -96,7 +96,7 @@ fn safe_create_file(path: &Path) -> anyhow::Result<File> {
     Ok(File::create(path)?)
 }
 
-#[derive(Debug, PartialEq, Eq, Ord, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entry {
     description: String,
     datetime: NaiveDateTime,
@@ -128,6 +128,12 @@ impl From<&str> for Entry {
 impl PartialOrd for Entry {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.datetime.partial_cmp(&other.datetime)
+    }
+}
+
+impl Ord for Entry {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.datetime.cmp(&other.datetime)
     }
 }
 
