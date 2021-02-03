@@ -53,6 +53,10 @@ fn delete() -> anyhow::Result<()> {
     let mut read_buf = ReadBuf::default();
     let mut db = Db::read(&db_location, &mut read_buf)?;
 
+    if db.is_empty() {
+        anyhow::bail!("you can’t delete any entries because you don’t have any yet");
+    }
+
     println!("Which entry would you like to delete?");
     println!("{}", db.entry_overview());
     let entry_to_delete = prompt("positive number")?;

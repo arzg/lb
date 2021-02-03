@@ -48,6 +48,10 @@ impl<'a> Db<'a> {
             .collect()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
     pub fn read(location: &DbLocation, read_buf: &'a mut ReadBuf) -> anyhow::Result<Self> {
         let DbLocation(path) = location;
 
