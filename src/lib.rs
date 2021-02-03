@@ -28,8 +28,7 @@ impl<'a> Db<'a> {
         self.entries
             .iter()
             .map(|entry| format!("- {}: {}", entry.datetime.date(), entry.description))
-            .intersperse("\n".to_string())
-            .collect()
+            .join("\n")
     }
 
     pub fn entry_overview(&self) -> String {
@@ -44,8 +43,7 @@ impl<'a> Db<'a> {
                     truncate(entry.description, 40),
                 )
             })
-            .intersperse("\n".to_string())
-            .collect()
+            .join("\n")
     }
 
     pub fn is_empty(&self) -> bool {
