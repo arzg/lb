@@ -11,7 +11,7 @@ fn main() -> anyhow::Result<()> {
     let subcommand = if let Some(s) = args.next() {
         s
     } else {
-        anyhow::bail!("you must specify a subcommand (‘add’, ‘delete’ or ‘export’)");
+        anyhow::bail!("you must specify a subcommand (‘add’, ‘delete’, ‘edit’ or ‘export’)");
     };
 
     let db_location = DbLocation::locate()?;
@@ -20,8 +20,9 @@ fn main() -> anyhow::Result<()> {
     match subcommand.as_str() {
         "add" => add(db, db_location)?,
         "delete" => delete(db, db_location)?,
+        "edit" => edit(db, db_location)?,
         "export" => export(db)?,
-        _ => anyhow::bail!("invalid subcommand (try ‘add’, ‘delete’ or ‘export’ instead)"),
+        _ => anyhow::bail!("invalid subcommand (try ‘add’, ‘delete’, ‘edit’ or ‘export’ instead)"),
     }
 
     Ok(())
@@ -46,6 +47,25 @@ fn delete(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
     let entry_to_delete = prompt("positive number")?;
 
     db.delete_entry(entry_to_delete);
+    db.write(&db_location)?;
+
+    Ok(())
+}
+
+fn edit(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
+    if db.is_empty() {
+        anyhow::bail!("you can’t edit any entries because you don’t have any yet");
+    }
+
+    println!("Which entry would you like to edit?");
+    println!("{}", db.entry_overview());
+    let entry_to_edit = prompt("positive number")?;
+
+    let current_description = db.get_entry_description(entry_to_edit);
+    let edited_description = get_input_from_editoe(current_description)?;
+
+    db.replace_entry_description(entry_to_edit, edited_description);
+
     db.write(&db_location)?;
 
     Ok(())

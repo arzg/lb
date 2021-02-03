@@ -49,6 +49,14 @@ impl Db {
         self.entries.is_empty()
     }
 
+    pub fn replace_entry_description(&mut self, idx: usize, description: String) {
+        self.entries[idx].description = description;
+    }
+
+    pub fn get_entry_description(&self, idx: usize) -> &str {
+        &self.entries[idx].description
+    }
+
     pub fn read(location: &DbLocation) -> anyhow::Result<Self> {
         let DbLocation(path) = location;
 
