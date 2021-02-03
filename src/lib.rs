@@ -2,6 +2,7 @@ use chrono::{Local, NaiveDate};
 use etcetera::app_strategy::{AppStrategy, AppStrategyArgs, Xdg};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -15,6 +16,7 @@ pub struct Db<'a> {
 impl<'a> Db<'a> {
     pub fn push_entry(&mut self, entry: Entry<'a>) {
         self.entries.push(entry);
+        self.entries.sort_unstable();
     }
 
     pub fn markdown(&self) -> String {
@@ -77,7 +79,7 @@ pub struct ReadBuf {
     file_contents: Option<Vec<u8>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Ord, Serialize, Deserialize)]
 pub struct Entry<'a> {
     description: &'a str,
     date: NaiveDate,
@@ -103,5 +105,11 @@ impl<'a> From<&'a str> for Entry<'a> {
             description: s,
             date: Local::today().naive_local(),
         }
+    }
+}
+
+impl PartialOrd for Entry<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.date.partial_cmp(&other.date)
     }
 }
