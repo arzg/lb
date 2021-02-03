@@ -31,7 +31,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn add(db: &mut Db) -> anyhow::Result<()> {
-    let entry = get_input_from_editoe("")?;
+    let entry = get_input_from_editor("")?;
     db.push_entry(Entry::from(entry.as_str()));
 
     Ok(())
@@ -61,7 +61,7 @@ fn edit(db: &mut Db) -> anyhow::Result<()> {
     let entry_to_edit = prompt("positive number")?;
 
     let current_description = db.get_entry_description(entry_to_edit);
-    let edited_description = get_input_from_editoe(current_description)?;
+    let edited_description = get_input_from_editor(current_description)?;
 
     db.replace_entry_description(entry_to_edit, edited_description);
 
@@ -73,7 +73,7 @@ fn export(db: &Db) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_input_from_editoe(initial_content: &str) -> anyhow::Result<String> {
+fn get_input_from_editor(initial_content: &str) -> anyhow::Result<String> {
     let editor = env::var("EDITOR")?;
 
     let mut file = NamedTempFile::new()?;
