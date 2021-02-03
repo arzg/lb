@@ -9,13 +9,12 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct Db<'a> {
-    #[serde(borrow)]
-    entries: Vec<Entry<'a>>,
+pub struct Db {
+    entries: Vec<Entry>,
 }
 
-impl<'a> Db<'a> {
-    pub fn push_entry(&mut self, entry: Entry<'a>) {
+impl Db {
+    pub fn push_entry(&mut self, entry: Entry) {
         self.entries.push(entry);
         self.entries.sort_unstable();
     }
@@ -40,7 +39,7 @@ impl<'a> Db<'a> {
                     "[{:04}] {}: {}",
                     idx,
                     entry.datetime.date(),
-                    truncate(entry.description, 40),
+                    truncate(&entry.description, 40),
                 )
             })
             .join("\n")
@@ -50,16 +49,15 @@ impl<'a> Db<'a> {
         self.entries.is_empty()
     }
 
-    pub fn read(location: &DbLocation, read_buf: &'a mut ReadBuf) -> anyhow::Result<Self> {
+    pub fn read(location: &DbLocation) -> anyhow::Result<Self> {
         let DbLocation(path) = location;
 
         if !path.exists() {
             return Self::initialize(location);
         }
 
-        read_buf.file_contents = Some(fs::read(path)?);
-
-        let db = bincode::deserialize(read_buf.file_contents.as_ref().unwrap())?;
+        let file = File::open(path)?;
+        let db = bincode::deserialize_from(file)?;
 
         Ok(db)
     }
@@ -98,19 +96,14 @@ fn safe_create_file(path: &Path) -> anyhow::Result<File> {
     Ok(File::create(path)?)
 }
 
-#[derive(Default)]
-pub struct ReadBuf {
-    file_contents: Option<Vec<u8>>,
-}
-
 #[derive(Debug, PartialEq, Eq, Ord, Serialize, Deserialize)]
-pub struct Entry<'a> {
-    description: &'a str,
+pub struct Entry {
+    description: String,
     datetime: NaiveDateTime,
 }
 
-impl<'a> From<&'a str> for Entry<'a> {
-    fn from(s: &'a str) -> Self {
+impl From<&str> for Entry {
+    fn from(s: &str) -> Self {
         let s = s.trim();
 
         if let Some(first_line_ending) = s.find('\n') {
@@ -119,20 +112,20 @@ impl<'a> From<&'a str> for Entry<'a> {
             let datetime_on_first_line = NaiveDateTime::from_str(first_line);
             if let Ok(datetime) = datetime_on_first_line {
                 return Self {
-                    description: rest.trim(),
+                    description: rest.trim().to_string(),
                     datetime,
                 };
             }
         }
 
         Self {
-            description: s,
+            description: s.to_string(),
             datetime: Local::now().naive_local(),
         }
     }
 }
 
-impl PartialOrd for Entry<'_> {
+impl PartialOrd for Entry {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.datetime.partial_cmp(&other.datetime)
     }

@@ -1,4 +1,4 @@
-use journal::{Db, DbLocation, Entry, ReadBuf};
+use journal::{Db, DbLocation, Entry};
 use std::io::{self, Write};
 use std::process::Command;
 use std::str::FromStr;
@@ -39,8 +39,7 @@ fn add() -> anyhow::Result<()> {
     path.close()?;
 
     let db_location = DbLocation::locate()?;
-    let mut read_buf = ReadBuf::default();
-    let mut db = Db::read(&db_location, &mut read_buf)?;
+    let mut db = Db::read(&db_location)?;
 
     db.push_entry(Entry::from(entry.as_str()));
     db.write(&db_location)?;
@@ -50,8 +49,7 @@ fn add() -> anyhow::Result<()> {
 
 fn delete() -> anyhow::Result<()> {
     let db_location = DbLocation::locate()?;
-    let mut read_buf = ReadBuf::default();
-    let mut db = Db::read(&db_location, &mut read_buf)?;
+    let mut db = Db::read(&db_location)?;
 
     if db.is_empty() {
         anyhow::bail!("you can’t delete any entries because you don’t have any yet");
@@ -69,8 +67,7 @@ fn delete() -> anyhow::Result<()> {
 
 fn export() -> anyhow::Result<()> {
     let db_location = DbLocation::locate()?;
-    let mut read_buf = ReadBuf::default();
-    let db = Db::read(&db_location, &mut read_buf)?;
+    let db = Db::read(&db_location)?;
 
     println!("{}", db.markdown());
 
