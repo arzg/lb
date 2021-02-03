@@ -25,42 +25,45 @@ impl<'a> Db<'a> {
             .collect()
     }
 
-    pub fn read(read_buf: &'a mut ReadBuf) -> anyhow::Result<Self> {
-        let db_path = Self::path()?;
+    pub fn read(location: &DbLocation, read_buf: &'a mut ReadBuf) -> anyhow::Result<Self> {
+        let DbLocation(path) = location;
 
-        if !db_path.exists() {
-            return Self::initialize();
+        if !path.exists() {
+            return Self::initialize(location);
         }
 
-        read_buf.file_contents = Some(fs::read(db_path)?);
+        read_buf.file_contents = Some(fs::read(path)?);
 
         let db = bincode::deserialize(read_buf.file_contents.as_ref().unwrap())?;
 
         Ok(db)
     }
 
-    pub fn write(&self) -> anyhow::Result<()> {
-        let db_path = Self::path()?;
-        let db_file = safe_create_file(&db_path)?;
+    pub fn write(&self, DbLocation(path): &DbLocation) -> anyhow::Result<()> {
+        let db_file = safe_create_file(path)?;
         bincode::serialize_into(db_file, &self)?;
 
         Ok(())
     }
 
-    fn initialize() -> anyhow::Result<Self> {
+    fn initialize(location: &DbLocation) -> anyhow::Result<Self> {
         let db = Self::default();
-        db.write()?;
+        db.write(location)?;
         Ok(db)
     }
+}
 
-    fn path() -> anyhow::Result<PathBuf> {
+pub struct DbLocation(PathBuf);
+
+impl DbLocation {
+    pub fn locate() -> anyhow::Result<Self> {
         let xdg = Xdg::new(AppStrategyArgs {
             top_level_domain: "io.github".to_string(),
             author: "arzg".to_string(),
             app_name: "journal".to_string(),
         })?;
 
-        Ok(xdg.in_data_dir("db"))
+        Ok(Self(xdg.in_data_dir("db")))
     }
 }
 
