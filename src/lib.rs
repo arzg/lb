@@ -7,6 +7,7 @@ use std::cmp::Ordering;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Db {
@@ -146,17 +147,18 @@ impl Ord for Entry {
 }
 
 fn truncate(s: &str, len: usize) -> Cow<'_, str> {
-    if s.len() < len {
+    let mut graphemes: Vec<_> = s.graphemes(true).collect();
+
+    if graphemes.len() < len {
         s.into()
     } else {
-        let s = &s[0..len];
-        let mut chars: Vec<_> = s.chars().collect();
-        let num_chars = chars.len();
+        let trimmed = &mut graphemes[..len];
+        let last_three = &mut trimmed[len - 3..];
 
-        for c in &mut chars[num_chars - 3..] {
-            *c = '.';
+        for c in last_three {
+            *c = ".";
         }
 
-        chars.iter().collect::<String>().into()
+        trimmed.iter().copied().collect::<String>().into()
     }
 }
