@@ -1,4 +1,4 @@
-use journal::{Db, Entry};
+use journal::{Db, Entry, ReadBuf};
 use std::env;
 use std::fs;
 use std::process::Command;
@@ -36,7 +36,8 @@ fn add() -> anyhow::Result<()> {
     let entry = fs::read_to_string(&path)?;
     path.close()?;
 
-    let mut db = Db::read()?;
+    let mut read_buf = ReadBuf::default();
+    let mut db = Db::read(&mut read_buf)?;
     db.push_entry(Entry::from(entry.as_str()));
     db.write()?;
 
@@ -44,7 +45,8 @@ fn add() -> anyhow::Result<()> {
 }
 
 fn export() -> anyhow::Result<()> {
-    let db = Db::read()?;
+    let mut read_buf = ReadBuf::default();
+    let db = Db::read(&mut read_buf)?;
     println!("{}", db.markdown());
 
     Ok(())
