@@ -1,3 +1,4 @@
+use chrono::{Local, NaiveDate};
 use etcetera::app_strategy::{AppStrategy, AppStrategyArgs, Xdg};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -101,13 +102,14 @@ impl Db {
     fn push_entry(&mut self, description: &str) {
         self.entries.push(Entry {
             description: description.trim().to_string(),
+            date: Local::today().naive_local(),
         });
     }
 
     fn markdown(&self) -> String {
         self.entries
             .iter()
-            .map(|entry| format!("- {}", entry.description))
+            .map(|entry| format!("- {}: {}", entry.date, entry.description))
             .intersperse("\n".to_string())
             .collect()
     }
@@ -116,4 +118,5 @@ impl Db {
 #[derive(Debug, Serialize, Deserialize)]
 struct Entry {
     description: String,
+    date: NaiveDate,
 }
