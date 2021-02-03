@@ -11,7 +11,7 @@ fn main() -> anyhow::Result<()> {
     let subcommand = if let Some(s) = args.next() {
         s
     } else {
-        anyhow::bail!("you must specify a subcommand (‘add’ or ‘export’)");
+        anyhow::bail!("you must specify a subcommand (‘add’, ‘delete’ or ‘export’)");
     };
 
     let db_location = DbLocation::locate()?;
@@ -21,7 +21,7 @@ fn main() -> anyhow::Result<()> {
         "add" => add(db, db_location)?,
         "delete" => delete(db, db_location)?,
         "export" => export(db)?,
-        _ => anyhow::bail!("invalid subcommand (try ‘add’ or ‘export’ instead)"),
+        _ => anyhow::bail!("invalid subcommand (try ‘add’, ‘delete’ or ‘export’ instead)"),
     }
 
     Ok(())
