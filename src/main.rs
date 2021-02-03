@@ -94,19 +94,26 @@ fn safe_create_file(path: &Path) -> anyhow::Result<File> {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct Db {
-    entries: Vec<String>,
+    entries: Vec<Entry>,
 }
 
 impl Db {
-    fn push_entry(&mut self, entry: &str) {
-        self.entries.push(entry.trim().to_string());
+    fn push_entry(&mut self, description: &str) {
+        self.entries.push(Entry {
+            description: description.trim().to_string(),
+        });
     }
 
     fn markdown(&self) -> String {
         self.entries
             .iter()
-            .map(|entry| format!("- {}", entry))
+            .map(|entry| format!("- {}", entry.description))
             .intersperse("\n".to_string())
             .collect()
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Entry {
+    description: String,
 }
