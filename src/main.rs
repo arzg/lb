@@ -1,7 +1,5 @@
-use chrono::{Local, NaiveDate};
 use etcetera::app_strategy::{AppStrategy, AppStrategyArgs, Xdg};
-use itertools::Itertools;
-use serde::{Deserialize, Serialize};
+use journal::Db;
 use std::env;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
@@ -91,32 +89,4 @@ fn get_db_path() -> anyhow::Result<PathBuf> {
 fn safe_create_file(path: &Path) -> anyhow::Result<File> {
     fs::create_dir_all(path.parent().unwrap())?;
     Ok(File::create(path)?)
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
-struct Db {
-    entries: Vec<Entry>,
-}
-
-impl Db {
-    fn push_entry(&mut self, description: &str) {
-        self.entries.push(Entry {
-            description: description.trim().to_string(),
-            date: Local::today().naive_local(),
-        });
-    }
-
-    fn markdown(&self) -> String {
-        self.entries
-            .iter()
-            .map(|entry| format!("- {}: {}", entry.date, entry.description))
-            .intersperse("\n".to_string())
-            .collect()
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Entry {
-    description: String,
-    date: NaiveDate,
 }
