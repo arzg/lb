@@ -11,7 +11,9 @@ fn main() -> anyhow::Result<()> {
     let subcommand = if let Some(s) = args.next() {
         s
     } else {
-        anyhow::bail!("you must specify a subcommand (‘add’, ‘delete’, ‘edit’ or ‘export’)");
+        anyhow::bail!(
+            "you must specify a subcommand (‘add’, ‘delete’, ‘edit’, ‘export’ or ‘overview’)",
+        );
     };
 
     let db_location = DbLocation::locate()?;
@@ -22,7 +24,10 @@ fn main() -> anyhow::Result<()> {
         "delete" => delete(&mut db)?,
         "edit" => edit(&mut db)?,
         "export" => export(&db)?,
-        _ => anyhow::bail!("invalid subcommand (try ‘add’, ‘delete’, ‘edit’ or ‘export’ instead)"),
+        "overview" => println!("{}", db.entry_overview()),
+        _ => anyhow::bail!(
+            "invalid subcommand (try ‘add’, ‘delete’, ‘edit’, ‘export’ or ‘overview’ instead)",
+        ),
     }
 
     db.write(&db_location)?;
