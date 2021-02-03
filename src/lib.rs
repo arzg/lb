@@ -1,4 +1,4 @@
-use chrono::{Local, NaiveDate};
+use chrono::{Local, NaiveDateTime};
 use etcetera::app_strategy::{AppStrategy, AppStrategyArgs, Xdg};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ impl<'a> Db<'a> {
     pub fn markdown(&self) -> String {
         self.entries
             .iter()
-            .map(|entry| format!("- {}: {}", entry.date, entry.description))
+            .map(|entry| format!("- {}: {}", entry.datetime.date(), entry.description))
             .intersperse("\n".to_string())
             .collect()
     }
@@ -82,7 +82,7 @@ pub struct ReadBuf {
 #[derive(Debug, PartialEq, Eq, Ord, Serialize, Deserialize)]
 pub struct Entry<'a> {
     description: &'a str,
-    date: NaiveDate,
+    datetime: NaiveDateTime,
 }
 
 impl<'a> From<&'a str> for Entry<'a> {
@@ -92,24 +92,24 @@ impl<'a> From<&'a str> for Entry<'a> {
         if let Some(first_line_ending) = s.find('\n') {
             let (first_line, rest) = s.split_at(first_line_ending);
 
-            let date_on_first_line = NaiveDate::from_str(first_line);
-            if let Ok(date) = date_on_first_line {
+            let datetime_on_first_line = NaiveDateTime::from_str(first_line);
+            if let Ok(datetime) = datetime_on_first_line {
                 return Self {
                     description: rest.trim(),
-                    date,
+                    datetime,
                 };
             }
         }
 
         Self {
             description: s,
-            date: Local::today().naive_local(),
+            datetime: Local::now().naive_local(),
         }
     }
 }
 
 impl PartialOrd for Entry<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.date.partial_cmp(&other.date)
+        self.datetime.partial_cmp(&other.datetime)
     }
 }
