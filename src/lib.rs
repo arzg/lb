@@ -4,6 +4,7 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Db {
@@ -74,9 +75,21 @@ pub struct Entry {
 
 impl From<&str> for Entry {
     fn from(s: &str) -> Self {
-        Self {
-            description: s.trim().to_string(),
-            date: Local::today().naive_local(),
+        let s = s.trim();
+        let mut lines = s.lines();
+
+        let date_on_first_line = lines.next().and_then(|line| NaiveDate::from_str(line).ok());
+
+        if let Some(date) = date_on_first_line {
+            Self {
+                description: lines.join("\n"),
+                date,
+            }
+        } else {
+            Self {
+                description: s.to_string(),
+                date: Local::today().naive_local(),
+            }
         }
     }
 }
