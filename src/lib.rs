@@ -11,11 +11,8 @@ pub struct Db {
 }
 
 impl Db {
-    pub fn push_entry(&mut self, description: &str) {
-        self.entries.push(Entry {
-            description: description.trim().to_string(),
-            date: Local::today().naive_local(),
-        });
+    pub fn push_entry(&mut self, entry: Entry) {
+        self.entries.push(entry);
     }
 
     pub fn markdown(&self) -> String {
@@ -70,7 +67,16 @@ fn safe_create_file(path: &Path) -> anyhow::Result<File> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Entry {
+pub struct Entry {
     description: String,
     date: NaiveDate,
+}
+
+impl From<&str> for Entry {
+    fn from(s: &str) -> Self {
+        Self {
+            description: s.trim().to_string(),
+            date: Local::today().naive_local(),
+        }
+    }
 }

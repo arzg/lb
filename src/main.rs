@@ -1,4 +1,4 @@
-use journal::Db;
+use journal::{Db, Entry};
 use std::env;
 use std::fs;
 use std::process::Command;
@@ -37,7 +37,7 @@ fn add() -> anyhow::Result<()> {
     path.close()?;
 
     let mut db = Db::read()?;
-    db.push_entry(&entry);
+    db.push_entry(Entry::from(entry.as_str()));
     db.write()?;
 
     Ok(())
