@@ -63,7 +63,7 @@ fn edit(db: &mut Db) -> anyhow::Result<()> {
     let current_description = db.get_entry_description(entry_to_edit);
     let edited_description = get_input_from_editor(current_description)?;
 
-    db.replace_entry_description(entry_to_edit, edited_description);
+    db.replace_entry_description(entry_to_edit, edited_description.trim().to_string());
 
     Ok(())
 }
