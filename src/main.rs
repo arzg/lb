@@ -14,17 +14,20 @@ fn main() -> anyhow::Result<()> {
         anyhow::bail!("you must specify a subcommand (‘add’ or ‘export’)");
     };
 
+    let db_location = DbLocation::locate()?;
+    let db = Db::read(&db_location)?;
+
     match subcommand.as_str() {
-        "add" => add()?,
-        "delete" => delete()?,
-        "export" => export()?,
+        "add" => add(db, db_location)?,
+        "delete" => delete(db, db_location)?,
+        "export" => export(db)?,
         _ => anyhow::bail!("invalid subcommand (try ‘add’ or ‘export’ instead)"),
     }
 
     Ok(())
 }
 
-fn add() -> anyhow::Result<()> {
+fn add(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
     let editor = env::var("EDITOR")?;
 
     let file = NamedTempFile::new()?;
@@ -38,19 +41,13 @@ fn add() -> anyhow::Result<()> {
     let entry = fs::read_to_string(&path)?;
     path.close()?;
 
-    let db_location = DbLocation::locate()?;
-    let mut db = Db::read(&db_location)?;
-
     db.push_entry(Entry::from(entry.as_str()));
     db.write(&db_location)?;
 
     Ok(())
 }
 
-fn delete() -> anyhow::Result<()> {
-    let db_location = DbLocation::locate()?;
-    let mut db = Db::read(&db_location)?;
-
+fn delete(mut db: Db, db_location: DbLocation) -> anyhow::Result<()> {
     if db.is_empty() {
         anyhow::bail!("you can’t delete any entries because you don’t have any yet");
     }
@@ -65,10 +62,7 @@ fn delete() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn export() -> anyhow::Result<()> {
-    let db_location = DbLocation::locate()?;
-    let db = Db::read(&db_location)?;
-
+fn export(db: Db) -> anyhow::Result<()> {
     println!("{}", db.markdown());
 
     Ok(())
