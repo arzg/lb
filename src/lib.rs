@@ -2,6 +2,7 @@ use chrono::{Local, NaiveDateTime};
 use etcetera::app_strategy::{AppStrategy, AppStrategyArgs, Xdg};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
@@ -19,10 +20,30 @@ impl<'a> Db<'a> {
         self.entries.sort_unstable();
     }
 
+    pub fn delete_entry(&mut self, idx: usize) {
+        self.entries.remove(idx);
+    }
+
     pub fn markdown(&self) -> String {
         self.entries
             .iter()
             .map(|entry| format!("- {}: {}", entry.datetime.date(), entry.description))
+            .intersperse("\n".to_string())
+            .collect()
+    }
+
+    pub fn entry_overview(&self) -> String {
+        self.entries
+            .iter()
+            .enumerate()
+            .map(|(idx, entry)| {
+                format!(
+                    "[{:04}] {}: {}",
+                    idx,
+                    entry.datetime.date(),
+                    truncate(entry.description, 40),
+                )
+            })
             .intersperse("\n".to_string())
             .collect()
     }
@@ -111,5 +132,21 @@ impl<'a> From<&'a str> for Entry<'a> {
 impl PartialOrd for Entry<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.datetime.partial_cmp(&other.datetime)
+    }
+}
+
+fn truncate(s: &str, len: usize) -> Cow<'_, str> {
+    if s.len() < len {
+        s.into()
+    } else {
+        let s = &s[0..len];
+        let mut chars: Vec<_> = s.chars().collect();
+        let num_chars = chars.len();
+
+        for c in &mut chars[num_chars - 3..] {
+            *c = '.';
+        }
+
+        chars.iter().collect::<String>().into()
     }
 }

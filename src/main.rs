@@ -1,7 +1,8 @@
 use journal::{Db, DbLocation, Entry, ReadBuf};
-use std::env;
-use std::fs;
+use std::io::{self, Write};
 use std::process::Command;
+use std::str::FromStr;
+use std::{env, fs};
 use tempfile::NamedTempFile;
 
 fn main() -> anyhow::Result<()> {
@@ -15,6 +16,7 @@ fn main() -> anyhow::Result<()> {
 
     match subcommand.as_str() {
         "add" => add()?,
+        "delete" => delete()?,
         "export" => export()?,
         _ => anyhow::bail!("invalid subcommand (try ‘add’ or ‘export’ instead)"),
     }
@@ -46,6 +48,21 @@ fn add() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn delete() -> anyhow::Result<()> {
+    let db_location = DbLocation::locate()?;
+    let mut read_buf = ReadBuf::default();
+    let mut db = Db::read(&db_location, &mut read_buf)?;
+
+    println!("Which entry would you like to delete?");
+    println!("{}", db.entry_overview());
+    let entry_to_delete = prompt("positive number")?;
+
+    db.delete_entry(entry_to_delete);
+    db.write(&db_location)?;
+
+    Ok(())
+}
+
 fn export() -> anyhow::Result<()> {
     let db_location = DbLocation::locate()?;
     let mut read_buf = ReadBuf::default();
@@ -54,4 +71,26 @@ fn export() -> anyhow::Result<()> {
     println!("{}", db.markdown());
 
     Ok(())
+}
+
+fn prompt<T>(data_type_name: &str) -> anyhow::Result<T>
+where
+    T: FromStr,
+    T::Err: std::error::Error + Send + Sync + 'static,
+{
+    loop {
+        print!("> ");
+        io::stdout().flush()?;
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+
+        match input.trim().parse() {
+            Ok(value) => return Ok(value),
+            Err(e) => {
+                println!("Error: {:?}", anyhow::Error::new(e));
+                eprintln!("Note: expected a {}", data_type_name);
+            }
+        }
+    }
 }
