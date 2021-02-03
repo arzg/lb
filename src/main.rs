@@ -69,7 +69,12 @@ fn edit(db: &mut Db) -> anyhow::Result<()> {
 }
 
 fn export(db: &Db) -> anyhow::Result<()> {
-    println!("{}", db.markdown());
+    if db.is_empty() {
+        println!("You have no entries.");
+    } else {
+        println!("{}", db.markdown());
+    }
+
     Ok(())
 }
 
